@@ -9,7 +9,7 @@
 
 color_t default_color = {255, 93, 204, 255};
 color_t empty_color = {0, 0, 0, 0};
-#define COLORS 19
+#define COLORS 5
 color_t colors[COLORS];
 
 color_t GetColorFromImage(image_t* image, int index) {
@@ -42,6 +42,15 @@ int main(void) {
     image_t* background = Image_CreateImage("src/base/background.png");
     image_t* head = Image_CreateImage("src/base/head.png");
     image_t* torso = Image_CreateImage("src/base/torso.png");
+    image_t* glasses = Image_CreateImage("src/base/glasses.png");
+
+
+    Color_FillColor(&colors[0], 95, 161, 231, 255);
+    Color_FillColor(&colors[1], 202, 96, 174, 255);
+    Color_FillColor(&colors[2], 243, 167, 135, 255);
+    Color_FillColor(&colors[3], 245, 218, 167, 255);
+    Color_FillColor(&colors[4], 74, 185, 163, 255);
+    /*
     Color_FillColor(&colors[0], 133, 218, 235, 255);
     Color_FillColor(&colors[1], 95, 201, 231, 255);
     Color_FillColor(&colors[2],  95, 161, 231, 255);
@@ -66,6 +75,7 @@ int main(void) {
     Color_FillColor(&colors[17],  94, 253, 247, 255);
 
     Color_FillColor(&colors[18],  253, 254, 137, 255);
+    */
 
 
     printf("background image width: %d, image height: %d, components: %d\n", background->image_width, background->image_height, background->components_per_pixel);
@@ -77,45 +87,59 @@ int main(void) {
     for(int bg = 0; bg < COLORS; bg++) {
         for(int skn = 0; skn < COLORS; skn++) {
             for(int trs = 0; trs < COLORS; trs++) {
-                for(int j = 0; j < total_size; j += 4) {
+                for(int glss = 0; glss < COLORS; glss++) {
+                    for(int j = 0; j < total_size; j += 4) {
 
-                    color_t currentBgColor = GetColorFromImage(background, j);
-                    color_t currentSkinColor = GetColorFromImage(head, j);
-                    color_t currentTorsoColor = GetColorFromImage(torso, j);
+                        color_t currentBgColor = GetColorFromImage(background, j);
+                        color_t currentSkinColor = GetColorFromImage(head, j);
+                        color_t currentTorsoColor = GetColorFromImage(torso, j);
+                        color_t currentGlassColor = GetColorFromImage(glasses, j);
 
-                    if(Color_IsEqual(&currentBgColor, &default_color) == 1) {
-                        PutColorOnData(save_data, j, &colors[bg]);
-                    } else {
-                        PutColorOnDataRGB(save_data, j, background->data[j], background->data[j+1], background->data[j+2]);
+                        if(Color_IsEqual(&currentBgColor, &default_color) == 1) {
+                            PutColorOnData(save_data, j, &colors[bg]);
+                        } else {
+                            PutColorOnDataRGB(save_data, j, background->data[j], background->data[j+1], background->data[j+2]);
+                        }
+
+                        if(Color_IsEqual(&currentTorsoColor, &default_color) == 1) {
+                            PutColorOnData(save_data, j, &colors[trs]);
+                        } else if(!Color_IsEqual(&currentTorsoColor, &empty_color)) {
+                            PutColorOnDataRGB(save_data, j, torso->data[j], torso->data[j+1], torso->data[j+2]);
+                        }
+
+                        if(Color_IsEqual(&currentSkinColor, &default_color) == 1) {
+                            PutColorOnData(save_data, j, &colors[skn]);
+                        } else if(!Color_IsEqual(&currentSkinColor, &empty_color)) {
+                            PutColorOnDataRGB(save_data, j, head->data[j], head->data[j+1], head->data[j+2]);
+                        }
+
+                        if(Color_IsEqual(&currentSkinColor, &default_color) == 1) {
+                            PutColorOnData(save_data, j, &colors[skn]);
+                        } else if(!Color_IsEqual(&currentSkinColor, &empty_color)) {
+                            PutColorOnDataRGB(save_data, j, head->data[j], head->data[j+1], head->data[j+2]);
+                        }
+
+                        if(Color_IsEqual(&currentGlassColor, &default_color) == 1) {
+                            PutColorOnData(save_data, j, &colors[glss]);
+                        } else if(!Color_IsEqual(&currentGlassColor, &empty_color)) {
+                            PutColorOnDataRGB(save_data, j, glasses->data[j], glasses->data[j+1], glasses->data[j+2]);
+                        }
+
                     }
 
-                    if(Color_IsEqual(&currentTorsoColor, &default_color) == 1) {
-                        PutColorOnData(save_data, j, &colors[trs]);
-                    } else if(!Color_IsEqual(&currentTorsoColor, &empty_color)) {
-                        PutColorOnDataRGB(save_data, j, torso->data[j], torso->data[j+1], torso->data[j+2]);
-                    }
+                    char filename[50];
+                    char temp[5];
+                    memset(filename, 0, strlen(filename));
+                    memset(temp, 0, strlen(temp));
+                    sprintf(temp, "%d", variation);
+                    variation++;
 
-                    if(Color_IsEqual(&currentSkinColor, &default_color) == 1) {
-                        PutColorOnData(save_data, j, &colors[skn]);
-                    } else if(!Color_IsEqual(&currentSkinColor, &empty_color)) {
-                        PutColorOnDataRGB(save_data, j, head->data[j], head->data[j+1], head->data[j+2]);
-                    }
-
+                    strcat(filename, "src/output/variation_");
+                    strcat(filename, temp);
+                    strcat(filename,".png");
+                    printf("Generating variation %d...\n", variation);
+                    stbi_write_png(filename, background->image_width, background->image_height, background->components_per_pixel, (void*)(save_data), 0);
                 }
-
-
-                char filename[50];
-                char temp[5];
-                memset(filename, 0, strlen(filename));
-                memset(temp, 0, strlen(temp));
-                sprintf(temp, "%d", variation);
-                variation++;
-
-                strcat(filename, "src/output/variation_");
-                strcat(filename, temp);
-                strcat(filename,".png");
-                printf("Generating variation %d...\n", variation);
-                stbi_write_png(filename, background->image_width, background->image_height, background->components_per_pixel, (void*)(save_data), 0);
             }
         }
     }
